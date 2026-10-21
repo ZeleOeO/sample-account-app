@@ -6,10 +6,11 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@AllArgsConstructor
 public class Account {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,4 +30,14 @@ public class Account {
 
     @PrePersist void onCreate() { this.createdAt = Instant.now(); }
     @PreUpdate void onUpdate() { this.createdAt = Instant.now(); }
+
+     public Account() {
+        this.balance = BigDecimal.ZERO;
+        this.account_number = generateAccountNumber();
+    }
+
+
+    private String generateAccountNumber() {
+        return String.valueOf(1_000_000_000L + ThreadLocalRandom.current().nextLong(9_000_000_000L));
+    }
 }

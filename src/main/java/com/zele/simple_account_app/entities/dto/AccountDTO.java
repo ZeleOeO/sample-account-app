@@ -1,5 +1,6 @@
 package com.zele.simple_account_app.entities.dto;
 
+import com.zele.simple_account_app.entities.Account;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,4 +16,8 @@ public class AccountDTO {
     BigDecimal balance;
     Instant createdAt;
     Instant updatedAt;
+
+    public static AccountDTO from(Account account) {
+        return new AccountDTO(account.getAccount_number(), account.getBalance(), account.getCreatedAt(), account.getUpdatedAt());
+    }
 }
