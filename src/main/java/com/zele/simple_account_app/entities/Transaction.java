@@ -10,7 +10,11 @@ import java.time.Instant;
 @Entity
 @Getter
 @NoArgsConstructor
-@Table(indexes = @Index(columnList = "account_id"))
+@Table(
+       uniqueConstraints = @UniqueConstraint(
+               name = "uk_tx_account_idempotency",
+               columnNames = {"account_id", "idempotency_key"}),
+       indexes = @Index(name = "idx_account", columnList = "account_id"))
 public class Transaction {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,7 +30,7 @@ public class Transaction {
     @Column(nullable = false)
     private TransactionType transactionType;
 
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(nullable = false,  length = 64)
      private String idempotencyKey;
 
     private Instant createdAt;

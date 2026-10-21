@@ -54,7 +54,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private TransactionDTO processTransaction(CreateTransactionRequest request, String idempotencyKey, TransactionType transactionType, String accountNumber) {
-        // Check the account exists, none of this should work if the account doesn't exist
+        // check idempkey, we check see if this transaction has been processed before
+        // idemp keys are unique to  an account
+        Optional<Transaction> optionalTransaction = transactionRepository.findTransactionByIdempotencyKeyAndAccountAccountNumber(idempotencyKey, accountNumber);
+        if (optionalTransaction.isPresent()) {
+            return TransactionDTO.from(optionalTransaction.get());
+        }
+
+        // Check if the account exists, none of this should work if the account doesn't exist
         // this also locks the row for this transaction until it completes, see README for why i chose pessmistic over optimistic writes like version
         Account account = accountRepository.findByAccountNumberForUpdate(accountNumber).orElseThrow(() -> new AccountNotFoundException(accountNumber));
 
@@ -62,12 +69,6 @@ public class AccountServiceImpl implements AccountService {
         BigDecimal amount = request.getAmount();
         amount = setAndValidateAmount(amount);
 
-        // check idempkey, now we can check to see if this transaction has been processed before
-        // transactions are unique to the whole table not just an account (or a client)
-        Optional<Transaction> optionalTransaction = transactionRepository.findTransactionByIdempotencyKey(idempotencyKey);
-        if (optionalTransaction.isPresent()) {
-            return TransactionDTO.from(optionalTransaction.get());
-        }
 
         //check if the account has sufficient or insufficient funds
         if (transactionType == TransactionType.Deflate && account.getBalance().compareTo(amount) < 0) {
