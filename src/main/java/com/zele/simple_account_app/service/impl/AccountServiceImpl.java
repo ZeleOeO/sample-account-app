@@ -39,5 +39,6 @@ public class AccountServiceImpl implements AccountService {
        return new DefaultAPIResponse<>(HttpStatus.CREATED.value(), "Account Created", AccountDTO.from(account));
     }
 
+    private void processTransaction(CreateTransactionRequest request ) {}
 }
 

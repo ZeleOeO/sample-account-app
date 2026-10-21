@@ -1,1 +1,14 @@
-services: { }
+services:
+  db:
+    image: postgres:latest
+    container_name: sample_accounts-db
+    environment:
+      POSTGRES_DB: sample_accounts-db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pgdata:/var/lib/postgresql
+    ports:
+      - '5433:5432'
+volumes:
+  pgdata:
