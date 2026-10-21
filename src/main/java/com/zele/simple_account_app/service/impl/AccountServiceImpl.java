@@ -1,44 +1,99 @@
 package com.zele.simple_account_app.service.impl;
 
 import com.zele.simple_account_app.entities.Account;
+import com.zele.simple_account_app.entities.Transaction;
 import com.zele.simple_account_app.entities.api.DefaultAPIResponse;
 import com.zele.simple_account_app.entities.dto.AccountDTO;
 import com.zele.simple_account_app.entities.dto.CreateTransactionRequest;
+import com.zele.simple_account_app.entities.dto.TransactionDTO;
+import com.zele.simple_account_app.entities.enums.TransactionType;
+import com.zele.simple_account_app.exceptions.AccountNotFoundException;
+import com.zele.simple_account_app.exceptions.InsufficientFundsException;
+import com.zele.simple_account_app.exceptions.InvalidAmountException;
 import com.zele.simple_account_app.repositories.AccountRepository;
+import com.zele.simple_account_app.repositories.TransactionRepository;
 import com.zele.simple_account_app.service.AccountService;
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
 @Slf4j
 public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
+    private final TransactionRepository transactionRepository;
+
 
     @Override
-    public DefaultAPIResponse<Object> debitAccount(int amount, int id) {
-        return null;
-    }
-
-    @Override
-    public DefaultAPIResponse<Object> creditAccount(int amount, int id) {
-        return null;
+    @Transactional
+    public DefaultAPIResponse<TransactionDTO> debitAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber) {
+        return new DefaultAPIResponse<>(HttpStatus.OK.value(), "Account Debited/Deflated", processTransaction(request, idempotencyKey, TransactionType.Deflate, accountNumber));
     }
 
     @Override
     @Transactional
-    public DefaultAPIResponse<Object> createAccount() {
-        // NOTE: I could do a validation check, just incase and have it retry a couple time
-        // to check and make sure the account doesn't already exist, but that's overkill for 10!
-        // I also opted not to use a try catch because of transaction rollback
-       Account account = new Account();
-       account = accountRepository.save(account);
-       return new DefaultAPIResponse<>(HttpStatus.CREATED.value(), "Account Created", AccountDTO.from(account));
+    public DefaultAPIResponse<TransactionDTO> creditAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber) {
+        return new DefaultAPIResponse<>(HttpStatus.OK.value(), "Account Credited/Infalte", processTransaction(request, idempotencyKey, TransactionType.Inflate, accountNumber));
     }
 
-    private void processTransaction(CreateTransactionRequest request ) {}
+    @Override
+    @Transactional
+    public DefaultAPIResponse<AccountDTO> createAccount() {
+        // NOTE: I could do a validation check, just incase an account like that already exists,
+        // and have it retry a couple time, but that's overkill
+        Account account = new Account();
+        account = accountRepository.save(account);
+        return new DefaultAPIResponse<>(HttpStatus.CREATED.value(), "Account Created", AccountDTO.from(account));
+    }
+
+    private TransactionDTO processTransaction(CreateTransactionRequest request, String idempotencyKey, TransactionType transactionType, String accountNumber) {
+        // Check the account exists, none of this should work if the account doesn't exist
+        // this also locks the row for this transaction until it completes, see README for why i chose pessmistic over optimistic writes like version
+        Account account = accountRepository.findByAccountNumberForUpdate(accountNumber).orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+        // validate the amount, if the amount is incorrect don't bother with the database
+        BigDecimal amount = request.getAmount();
+        amount = setAndValidateAmount(amount);
+
+        // check idempkey, now we can check to see if this transaction has been processed before
+        // transactions are unique to the whole table not just an account (or a client)
+        Optional<Transaction> optionalTransaction = transactionRepository.findTransactionByIdempotencyKey(idempotencyKey);
+        if (optionalTransaction.isPresent()) {
+            return TransactionDTO.from(optionalTransaction.get());
+        }
+
+        //check if the account has sufficient or insufficient funds
+        if (transactionType == TransactionType.Deflate && account.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException();
+        }
+        BigDecimal newBalance = transactionType == TransactionType.Inflate ? account.getBalance().add(amount) : account.getBalance().subtract(amount);
+
+        // update balance
+        account.setBalance(newBalance);
+
+        // save transaction and account
+        Transaction newTransaction = new Transaction(account, amount, transactionType, idempotencyKey);
+        newTransaction = transactionRepository.save(newTransaction);
+        return TransactionDTO.from(newTransaction);
+    }
+
+    private BigDecimal setAndValidateAmount(BigDecimal amount) {
+        if (amount == null) throw new InvalidAmountException("Amount is required");
+        if (amount.signum() <= 0) {
+            throw new InvalidAmountException("Amount must be greater than 0");
+        }
+        if (amount.scale() > 2) {
+            throw new InvalidAmountException(
+                    "Amount should not be in more than 2 decimal places, make your money no loss");
+        }
+        return amount.setScale(2, RoundingMode.UNNECESSARY);
+    }
 }
 

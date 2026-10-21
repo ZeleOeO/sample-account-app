@@ -31,6 +31,12 @@ public class Transaction {
 
     private Instant createdAt;
 
-
     @PrePersist void onCreate() { this.createdAt = Instant.now(); }
+
+    public Transaction(Account account, BigDecimal amount, TransactionType transactionType, String idempotencyKey) {
+        this.account = account;
+        this.amount = amount;
+        this.transactionType = transactionType;
+        this.idempotencyKey = idempotencyKey;
+    }
 }

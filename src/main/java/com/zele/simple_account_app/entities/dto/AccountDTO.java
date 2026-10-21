@@ -18,6 +18,6 @@ public class AccountDTO {
     Instant updatedAt;
 
     public static AccountDTO from(Account account) {
-        return new AccountDTO(account.getAccount_number(), account.getBalance(), account.getCreatedAt(), account.getUpdatedAt());
+        return new AccountDTO(account.getAccountNumber(), account.getBalance(), account.getCreatedAt(), account.getUpdatedAt());
     }
 }

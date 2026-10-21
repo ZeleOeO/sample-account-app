@@ -19,7 +19,7 @@ public class Account {
     private BigDecimal balance;
 
     @Column(unique = true, nullable = false, updatable = false)
-    private String account_number;
+    private String accountNumber;
 
     @Version private Long version;
 
@@ -33,11 +33,15 @@ public class Account {
 
      public Account() {
         this.balance = BigDecimal.ZERO;
-        this.account_number = generateAccountNumber();
+        this.accountNumber = generateAccountNumber();
     }
 
 
     private String generateAccountNumber() {
         return String.valueOf(1_000_000_000L + ThreadLocalRandom.current().nextLong(9_000_000_000L));
+    }
+
+    public void setBalance(BigDecimal balance) {
+        this.balance = balance;
     }
 }
