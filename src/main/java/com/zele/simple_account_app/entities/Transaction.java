@@ -15,7 +15,9 @@ import java.time.Instant;
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_tx_account_idempotency",
                 columnNames = {"account_id", "idempotency_key"}),
-        indexes = @Index(name = "idx_account", columnList = "account_id"))
+        indexes = @Index(name = "idx_account", columnList = "account_id"),
+        check = @CheckConstraint(name = "balance_non_negative", constraint = "balance>= 0")
+)
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
