@@ -10,6 +10,7 @@ import com.zele.simple_account_app.entities.enums.TransactionType;
 import com.zele.simple_account_app.exceptions.AccountNotFoundException;
 import com.zele.simple_account_app.exceptions.InsufficientFundsException;
 import com.zele.simple_account_app.exceptions.InvalidAmountException;
+import com.zele.simple_account_app.exceptions.TransactionAlreadyExistsException;
 import com.zele.simple_account_app.repositories.AccountRepository;
 import com.zele.simple_account_app.repositories.TransactionRepository;
 import com.zele.simple_account_app.service.impl.AccountServiceImpl;
@@ -119,7 +120,7 @@ class AccountServiceTest {
     }
 
     @Test
-    void repeatedKey_returnsExistingTransaction_andDoesNotTouchBalance() {
+    void repeatedKey_throwsTransactionAlreadyExists_andDoesNotTouchBalance() {
         Account acc = accountWithBalance("100.00");
         Transaction existing = new Transaction(
                 acc,
@@ -130,8 +131,8 @@ class AccountServiceTest {
         when(transactionRepository.findTransactionByIdempotencyKeyAndAccountAccountNumber("key1", "ACC1"))
                 .thenReturn(Optional.of(existing));
 
-        service.inflateAccount(request("50.00"), "key1", "ACC1");
 
+        assertThatThrownBy(() ->service.inflateAccount(request("50.00"), "key1", "ACC1")).isInstanceOf(TransactionAlreadyExistsException.class);
         assertThat(acc.getBalance()).isEqualByComparingTo("100.00");
         verify(accountRepository, never()).findByAccountNumberForUpdate(any());
         verify(transactionRepository, never()).save(any());
