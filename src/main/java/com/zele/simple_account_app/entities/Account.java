@@ -15,9 +15,11 @@ public class Account {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance;
 
+    @Setter
     @Column(unique = true, nullable = false, updatable = false)
     private String accountNumber;
 
@@ -41,7 +43,4 @@ public class Account {
         return String.valueOf(1_000_000_000L + ThreadLocalRandom.current().nextLong(9_000_000_000L));
     }
 
-    public void setBalance(BigDecimal balance) {
-        this.balance = balance;
-    }
 }

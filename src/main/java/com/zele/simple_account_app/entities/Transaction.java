@@ -9,7 +9,6 @@ import java.time.Instant;
 
 @Entity
 @Getter
-@NoArgsConstructor
 @Table(
        uniqueConstraints = @UniqueConstraint(
                name = "uk_tx_account_idempotency",
