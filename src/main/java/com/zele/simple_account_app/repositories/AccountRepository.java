@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface AccountRepository  extends JpaRepository<Account, Long> {
+public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findAccountByAccountNumber(String accountNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

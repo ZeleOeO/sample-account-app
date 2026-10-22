@@ -72,7 +72,7 @@ class AccountServiceTest {
                 .thenAnswer(inv -> inv.getArgument(0));
 
         DefaultAPIResponse<TransactionDTO> resp =
-                service.creditAccount(request("50.00"), "key1", "ACC1");
+                service.inflateAccount(request("50.00"), "key1", "ACC1");
 
         assertThat(acc.getBalance()).isEqualByComparingTo("150.00");
         assertThat(resp.getData().getTransactionType()).isEqualTo(TransactionType.Inflate);
@@ -87,7 +87,7 @@ class AccountServiceTest {
                 .thenReturn(Optional.empty());
         when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.debitAccount(request("40.00"), "key1", "ACC1");
+        service.deflateAccount(request("40.00"), "key1", "ACC1");
 
         assertThat(acc.getBalance()).isEqualByComparingTo("60.00");
     }
@@ -99,7 +99,7 @@ class AccountServiceTest {
         when(transactionRepository.findTransactionByIdempotencyKeyAndAccountAccountNumber("key1", "ACC1"))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.debitAccount(request("100.00"), "key1", "ACC1"))
+        assertThatThrownBy(() -> service.deflateAccount(request("100.00"), "key1", "ACC1"))
                 .isInstanceOf(InsufficientFundsException.class);
 
         assertThat(acc.getBalance()).isEqualByComparingTo("30.00");
@@ -113,7 +113,7 @@ class AccountServiceTest {
                 .thenReturn(Optional.empty());
         when(transactionRepository.save(any(Transaction.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.debitAccount(request("100.00"), "key1", "ACC1");
+        service.deflateAccount(request("100.00"), "key1", "ACC1");
 
         assertThat(acc.getBalance()).isEqualByComparingTo("0.00");
     }
@@ -130,7 +130,7 @@ class AccountServiceTest {
         when(transactionRepository.findTransactionByIdempotencyKeyAndAccountAccountNumber("key1", "ACC1"))
                 .thenReturn(Optional.of(existing));
 
-        service.creditAccount(request("50.00"), "key1", "ACC1");
+        service.inflateAccount(request("50.00"), "key1", "ACC1");
 
         assertThat(acc.getBalance()).isEqualByComparingTo("100.00");
         verify(accountRepository, never()).findByAccountNumberForUpdate(any());
@@ -147,7 +147,7 @@ class AccountServiceTest {
         when(accountRepository.findByAccountNumberForUpdate("ACC1"))
                 .thenReturn(Optional.of(accountWithBalance("100.00")));
 
-        assertThatThrownBy(() -> service.debitAccount(req, "key1", "ACC1"))
+        assertThatThrownBy(() -> service.deflateAccount(req, "key1", "ACC1"))
                 .isInstanceOf(InvalidAmountException.class)
                 .hasMessageContaining("required");
     }
@@ -159,9 +159,9 @@ class AccountServiceTest {
         when(transactionRepository.findTransactionByIdempotencyKeyAndAccountAccountNumber(any(), eq("ACC1")))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.debitAccount(request("0.00"), "k", "ACC1"))
+        assertThatThrownBy(() -> service.deflateAccount(request("0.00"), "k", "ACC1"))
                 .isInstanceOf(InvalidAmountException.class);
-        assertThatThrownBy(() -> service.debitAccount(request("-1.00"), "k", "ACC1"))
+        assertThatThrownBy(() -> service.deflateAccount(request("-1.00"), "k", "ACC1"))
                 .isInstanceOf(InvalidAmountException.class);
     }
 
@@ -172,7 +172,7 @@ class AccountServiceTest {
         when(transactionRepository.findTransactionByIdempotencyKeyAndAccountAccountNumber(any(), eq("ACC1")))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.debitAccount(request("10.005"), "k", "ACC1"))
+        assertThatThrownBy(() -> service.deflateAccount(request("10.005"), "k", "ACC1"))
                 .isInstanceOf(InvalidAmountException.class);
     }
 
@@ -183,7 +183,7 @@ class AccountServiceTest {
         when(accountRepository.findByAccountNumberForUpdate("NOPE"))
                 .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.debitAccount(request("10.00"), "k", "NOPE"))
+        assertThatThrownBy(() -> service.deflateAccount(request("10.00"), "k", "NOPE"))
                 .isInstanceOf(AccountNotFoundException.class);
     }
 

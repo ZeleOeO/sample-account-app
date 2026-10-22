@@ -1,18 +1,20 @@
 package com.zele.simple_account_app.entities;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Entity
 @Getter
 @AllArgsConstructor
 public class Account {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Setter
@@ -23,17 +25,25 @@ public class Account {
     @Column(unique = true, nullable = false, updatable = false)
     private String accountNumber;
 
-    @Version private Long version;
+    @Version
+    private Long version;
 
     @Column(nullable = false)
     private Instant createdAt;
 
     private Instant updatedAt;
 
-    @PrePersist void onCreate() { this.createdAt = Instant.now(); }
-    @PreUpdate void onUpdate() { this.createdAt = Instant.now(); }
+    @PrePersist
+    void onCreate() {
+        this.createdAt = Instant.now();
+    }
 
-     public Account() {
+    @PreUpdate
+    void onUpdate() {
+        this.createdAt = Instant.now();
+    }
+
+    public Account() {
         this.balance = BigDecimal.ZERO;
         this.accountNumber = generateAccountNumber();
     }

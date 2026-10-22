@@ -2,7 +2,7 @@ package com.zele.simple_account_app.entities;
 
 import com.zele.simple_account_app.entities.enums.TransactionType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -10,12 +10,13 @@ import java.time.Instant;
 @Entity
 @Getter
 @Table(
-       uniqueConstraints = @UniqueConstraint(
-               name = "uk_tx_account_idempotency",
-               columnNames = {"account_id", "idempotency_key"}),
-       indexes = @Index(name = "idx_account", columnList = "account_id"))
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_tx_account_idempotency",
+                columnNames = {"account_id", "idempotency_key"}),
+        indexes = @Index(name = "idx_account", columnList = "account_id"))
 public class Transaction {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -29,12 +30,15 @@ public class Transaction {
     @Column(nullable = false)
     private TransactionType transactionType;
 
-    @Column(nullable = false,  length = 64)
-     private String idempotencyKey;
+    @Column(nullable = false, length = 64)
+    private String idempotencyKey;
 
     private Instant createdAt;
 
-    @PrePersist void onCreate() { this.createdAt = Instant.now(); }
+    @PrePersist
+    void onCreate() {
+        this.createdAt = Instant.now();
+    }
 
     public Transaction(Account account, BigDecimal amount, TransactionType transactionType, String idempotencyKey) {
         this.account = account;

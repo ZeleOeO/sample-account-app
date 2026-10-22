@@ -33,14 +33,14 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     @Transactional
-    public DefaultAPIResponse<TransactionDTO> debitAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber) {
-        return new DefaultAPIResponse<>(HttpStatus.OK.value(), "Account Debited/Deflated", processTransaction(request, idempotencyKey, TransactionType.Deflate, accountNumber));
+    public DefaultAPIResponse<TransactionDTO> deflateAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber) {
+        return new DefaultAPIResponse<>(HttpStatus.OK.value(), "Account Deflated", processTransaction(request, idempotencyKey, TransactionType.Deflate, accountNumber));
     }
 
     @Override
     @Transactional
-    public DefaultAPIResponse<TransactionDTO> creditAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber) {
-        return new DefaultAPIResponse<>(HttpStatus.OK.value(), "Account Credited/Infalte", processTransaction(request, idempotencyKey, TransactionType.Inflate, accountNumber));
+    public DefaultAPIResponse<TransactionDTO> inflateAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber) {
+        return new DefaultAPIResponse<>(HttpStatus.OK.value(), "Account Inflated", processTransaction(request, idempotencyKey, TransactionType.Inflate, accountNumber));
     }
 
     @Override
