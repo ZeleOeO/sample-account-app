@@ -52,11 +52,12 @@ The db is hosted on docker, cause that's easier to set up than having pgadmin
 
 Some notes are on the service impl itself, but this is an overview
 
-- I used a pessmistic write, with `SELET.. FOR` because it's a small app, the other alternative would be @Version(optimistic), which is available for future integration.
+- I used a pessmistic write, with `SELECT.. FOR` because it's a small app, the other alternative would be @Version(optimistic), which is available for future integration.
     An issue with this approach is... locking is not really the best for concurrency as it can create latency. If an account is getting flooded with request (maybe paying school fees), but this is decent for a demo.
 - Idempotency keys are unique to accounts, at first i wanted to make it just unique in general, but this is better. In some cases, it would be unique to the client data itself.
-- There's a ledger, for now it's a single entry book-keeping strategy, just something simple, but double book keeping is most common in production systems, it's really just an increase and decrease system. If one account inflated another and deflated itself then double entry would suffice.
-
+- There's a ledger, for now it's a single entry book-keeping strategy, just something simple, but double book keeping is most common in production systems, but this is really just an increase and decrease system. If one account inflated another and deflated itself then double entry would suffice.
+- There are many more "next steps" that can be taken like adding an outbox table for reliable event publishing; move to a double-entry ledger; run a nightly reconciliation job comparing balances to ledger sums; add per-client rate limiting. All those fancy things.
+- The brief specifies inflation and deflation as operations on an account, so this service is modeled that way. A transfer , where one account is deflated and another inflated atomically,  is a different use case: it needs a single transaction spanning two accounts. Transfer would be a new thing completely, so that's why no account is deflated when another is inflated. 
 
 ## Usage
 
