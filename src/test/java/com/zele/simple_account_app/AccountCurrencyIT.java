@@ -9,6 +9,8 @@ import com.zele.simple_account_app.service.impl.AccountServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -23,6 +25,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Testcontainers
@@ -46,6 +49,8 @@ public class AccountCurrencyIT {
     AccountRepository accountRepo;
     @Autowired
     TransactionRepository txRepo;
+    @Autowired
+    JdbcTemplate jdbc;
 
     @Test
     void concurrentDeflates_neverOverDraw() throws Exception {
