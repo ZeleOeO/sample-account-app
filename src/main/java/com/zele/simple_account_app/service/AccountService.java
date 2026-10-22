@@ -11,4 +11,6 @@ public interface AccountService {
     DefaultAPIResponse<TransactionDTO> inflateAccount(CreateTransactionRequest request, String idempotencyKey, String accountNumber);
 
     DefaultAPIResponse<AccountDTO> createAccount();
+
+    DefaultAPIResponse<AccountDTO> getAccount(String accountNumber);
 }

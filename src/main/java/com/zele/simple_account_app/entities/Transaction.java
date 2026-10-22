@@ -3,12 +3,14 @@ package com.zele.simple_account_app.entities;
 import com.zele.simple_account_app.entities.enums.TransactionType;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
 @Getter
+@NoArgsConstructor
 @Table(
         uniqueConstraints = @UniqueConstraint(
                 name = "uk_tx_account_idempotency",

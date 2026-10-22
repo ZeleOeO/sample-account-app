@@ -16,16 +16,28 @@ import org.springframework.web.bind.annotation.*;
 public class AccountController {
     private final AccountService accountService;
 
-    @PostMapping("/")
+    @GetMapping("/health")
+    public ResponseEntity<DefaultAPIResponse<Object>> healthCheck() {
+        return ResponseEntity.status(HttpStatus.OK.value()).body(new DefaultAPIResponse<>(HttpStatus.OK.value(), "ALIVE", null));
+    }
+
+    @PostMapping("")
     public ResponseEntity<DefaultAPIResponse<AccountDTO>> createAccount() {
         return ResponseEntity.status(HttpStatus.CREATED.value()).body(accountService.createAccount());
+    }
+
+    @GetMapping("/{accountNumber}")
+    public ResponseEntity<DefaultAPIResponse<AccountDTO>> getAccount(
+            @PathVariable String accountNumber
+    ) {
+        return ResponseEntity.status(HttpStatus.OK.value()).body(accountService.getAccount(accountNumber));
     }
 
     @PostMapping("/deflate/{accountNumber}")
     public ResponseEntity<DefaultAPIResponse<TransactionDTO>> deflateAccount(
             @PathVariable String accountNumber,
             @RequestBody CreateTransactionRequest request,
-            @RequestHeader String idempotencyKey
+            @RequestHeader("Idempotency-Key") String idempotencyKey
     ) {
         return ResponseEntity.status(HttpStatus.OK.value()).body(accountService.deflateAccount(request, idempotencyKey, accountNumber));
     }
@@ -38,4 +50,5 @@ public class AccountController {
     ) {
         return ResponseEntity.status(HttpStatus.OK.value()).body(accountService.inflateAccount(request, idempotencyKey, account));
     }
+
 }
